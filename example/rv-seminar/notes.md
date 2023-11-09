@@ -37,3 +37,9 @@ Now we have a basic idea of what the Kore theory looks like, lets dig into the e
 ```
 python3 -m scripts.prove_symbolic example/rv-seminar/k-step/k-step.k KSTEP example/rv-seminar/k-step/test.txt -o example/rv-seminar/k-step/proof
 ```
+
+# Strictness example
+
+```
+python3 -m scripts.prove_symbolic example/rv-seminar/strict/arith.k ARITH example/rv-seminar/strict/test.txt -o example/rv-seminar/strict/proof
+```
