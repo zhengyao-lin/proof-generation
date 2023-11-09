@@ -1479,6 +1479,9 @@ class RewriteProofGenerator(ProofGenerator):
         self.preprocess_steps(task.steps)
 
         initial_pattern = task.get_initial_pattern().as_pattern()
+
+        KoreUtils.pretty_print(initial_pattern)
+
         final_claim = self.apply_reachability_reflexivity(kore.MLPattern.REWRITES_STAR, initial_pattern)
         final_claim = self.simplify_pattern(final_claim, [0, 1])
 
@@ -1493,6 +1496,8 @@ class RewriteProofGenerator(ProofGenerator):
 
             initial = step.get_initial_pattern().as_pattern()
             step_goal = KoreUtils.construct_rewrites_star(initial, result)
+
+            KoreUtils.pretty_print(step_goal)
 
             if step_goal in proved_steps:
                 claim = proved_steps[step_goal]
