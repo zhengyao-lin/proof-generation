@@ -1,10 +1,8 @@
 module ONESTEP
 
-imports DOMAINS
+syntax A ::= f()
+           | g()
 
-syntax A ::= f(Int)
-           | g(Int)
-
-rule f(X:Int) => g(X +Int 1)
+rule f() => g()
 
 endmodule
