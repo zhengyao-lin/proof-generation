@@ -1,7 +1,6 @@
-# syntax=docker/dockerfile:1.4
-# BuildKit is required to build this Dockerfile
-
-ARG jdk_build=https://download.java.net/java/GA/jdk15.0.2/0d1cfde4252546c6931946de8db48ee2/7/GPL/openjdk-15.0.2_linux-x64_bin.tar.gz
+# ARG jdk_build=https://download.java.net/java/GA/jdk15.0.2/0d1cfde4252546c6931946de8db48ee2/7/GPL/openjdk-15.0.2_linux-x64_bin.tar.gz
+ARG jdk_build=https://download.java.net/java/GA/jdk15.0.2/0d1cfde4252546c6931946de8db48ee2/7/GPL/openjdk-15.0.2_linux-aarch64_bin.tar.gz
+ARG stack_build=https://github.com/commercialhaskell/stack/releases/download/rc%2Fv2.9.0.1/stack-2.9.0.1-linux-aarch64.tar.gz
 
 ###########################
 # Base image for building #
@@ -17,7 +16,9 @@ RUN apt-get update && \
         pkg-config flex bison z3 libz3-dev maven \
         python3 cmake gcc clang-8 lld-8 llvm-8-tools \
         zlib1g-dev libboost-test-dev libyaml-dev \
-        libjemalloc-dev wget git curl
+        libjemalloc-dev wget git curl libnuma-dev
+RUN ln -s /usr/bin/opt-8 /usr/bin/opt && \
+    ln -s /usr/bin/llc-8 /usr/bin/llc
 
 # install a custom version of openjdk
 ARG jdk_build
@@ -31,7 +32,18 @@ RUN mkdir jdk-install && \
 ENV PATH="/opt/jdk/bin:${PATH}"
 
 # install haskell
-RUN curl -sSL https://get.haskellstack.org/ | sh
+ARG stack_build
+RUN mkdir stack-install && \
+    cd stack-install && \
+    wget -q --show-progress $stack_build && \
+    tar xf *.tar.* && \
+    mkdir -p /opt/stack/bin && \
+    cp stack-*/stack /opt/stack/bin && \
+    cd .. && \
+    rm -r stack-install
+ENV PATH="/opt/stack/bin:${PATH}"
+ENV LANG=C.UTF-8
+# RUN curl -sSL https://get.haskellstack.org/ | sh
 
 ######################
 # Build dependencies #
@@ -84,10 +96,10 @@ ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && \
     apt-get install --no-install-recommends -y \
-        tcc libc-dev flex bison z3 pypy3 python3-pip \
-        libjemalloc-dev metamath make time xz-utils && \
-    rm -rf /var/lib/apt/lists/* && \
-    ln -s /usr/bin/tcc /usr/bin/gcc
+        libc-dev flex bison z3 python3-pip \
+        libjemalloc-dev metamath make time xz-utils \
+        libnuma-dev build-essential && \
+    rm -rf /var/lib/apt/lists/*
 
 COPY --from=build /jre /opt/jre
 COPY --from=build /k/k-distribution/target/release/k/bin /opt/k/bin
@@ -107,23 +119,7 @@ ADD evaluation evaluation
 ADD example example
 ADD requirements.txt requirements.txt
 
-RUN pypy3 -m pip install -r requirements.txt
+RUN python3 -m pip install -r requirements.txt
 
 ADD paper.pdf paper.pdf
 ADD README.md README.md
-
-RUN cat >> /root/.bashrc <<'EOF'
-PS1='\w\$ '
-
-cat << EOT
-Welcome to the artifact evaluation Docker image for the paper
-    
-    Generating Proof Certificates for a Language-Agnostic Deductive Program Verifier
-    Zhengyao Lin, Xiaohong Chen, Minh-Thai Trinh, John Wang, and Grigore Rosu
-
-You can find a copy of our original submission at /opt/proof-generation/paper.pdf
-Instructions to use image can be found in /opt/proof-generation/README.md
-An online version of README.md is also available at https://github.com/kframework/proof-generation/blob/oopsla23-ae/README.md
-
-EOT
-EOF

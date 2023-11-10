@@ -7,6 +7,7 @@ sudo docker run -it \
     -v $(realpath ./ml):/opt/matching-logic-proof-checker/ml \
     zl38/matching-logic-proof-checker:main
 ```
+If you are using an ARM machine, try `zl38/matching-logic-proof-checker:aarch64`
 
 # One-step example
 
